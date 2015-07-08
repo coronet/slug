@@ -1,0 +1,51 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.coronet</groupId>
+    <artifactId>coronet-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <groupId>io.coronet.slug</groupId>
+  <artifactId>slug</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <name>Slug</name>
+  <description>
+    Slug is a framework for building flexible immutable POJOs.
+  </description>
+  <url>https://github.com/coronet/slug</url>
+
+  <scm>
+    <connection>scm:git:ssh://git@github.com/coronet/slug.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/coronet/slug.git</developerConnection>
+    <url>https://github.com/coronet/slug</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://github.com/coronet/slug/blob/master/LICENSE</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>io.coronet</groupId>
+      <artifactId>coronet-utils</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+</project>
