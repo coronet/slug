@@ -13,13 +13,6 @@ public interface Example extends Slug<Example> {
 
     static final class Impl extends AbstractSlug<Example> implements Example {
 
-        /**
-         * @param type
-         */
-        public Impl() {
-            super(Example.class);
-        }
-
         public Impl(Map<String, Object> map) {
             super(Example.class, map);
         }
@@ -35,11 +28,6 @@ public interface Example extends Slug<Example> {
         }
 
         public static final class Factory implements SlugFactory<Example> {
-
-            @Override
-            public Example create() {
-                return new Impl();
-            }
 
             @Override
             public Example create(Map<String, Object> map) {

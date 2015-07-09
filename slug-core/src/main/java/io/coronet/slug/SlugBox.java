@@ -119,7 +119,7 @@ public class SlugBox {
                 ABSTRACT_SLUG,
                 new String[] { ifaceName });
 
-        writeConstructors(writer, ifaceName);
+        writeConstructor(writer, ifaceName);
         writeMethods(writer, iface);
 
         // }
@@ -128,38 +128,9 @@ public class SlugBox {
         return loader.loadClass(writer.toByteArray());
     }
 
-    private void writeConstructors(
+    private void writeConstructor(
             ClassWriter writer,
             String ifaceName) {
-
-        Type ifaceType = Type.getObjectType(ifaceName);
-
-        {
-            // private ${IfaceType}$$Impl() {
-            MethodVisitor visitor = writer.visitMethod(
-                    Opcodes.ACC_PUBLIC,
-                    "<init>",
-                    "()V",
-                    null,
-                    null);
-
-            visitor.visitCode();
-
-            // super(${IfaceType}.class);
-            visitor.visitVarInsn(Opcodes.ALOAD, 0);
-            visitor.visitLdcInsn(ifaceType);
-            visitor.visitMethodInsn(
-                    Opcodes.INVOKESPECIAL,
-                    ABSTRACT_SLUG,
-                    "<init>",
-                    "(Ljava/lang/Class;)V",
-                    false);
-
-            // }
-            visitor.visitInsn(Opcodes.RETURN);
-            visitor.visitMaxs(2, 0);
-            visitor.visitEnd();
-        }
 
         {
             // private ${IfaceType}$$Impl(Map<String, Object> map) {
@@ -350,34 +321,6 @@ public class SlugBox {
 
             // }
             visitor.visitInsn(Opcodes.RETURN);
-            visitor.visitMaxs(1, 0);
-            visitor.visitEnd();
-        }
-
-        {
-            // public Slug create() {
-            MethodVisitor visitor = writer.visitMethod(
-                    Opcodes.ACC_PUBLIC,
-                    "create",
-                    "()Lio/coronet/slug/Slug;",
-                    null, // TODO: generics stuff?
-                    null);
-
-            visitor.visitCode();
-
-            // temp0 = new ${Impl}();
-            visitor.visitTypeInsn(Opcodes.NEW, implName);
-            visitor.visitInsn(Opcodes.DUP);
-            visitor.visitMethodInsn(
-                    Opcodes.INVOKESPECIAL,
-                    implName,
-                    "<init>",
-                    "()V",
-                    false);
-
-            // return temp0;
-            // }
-            visitor.visitInsn(Opcodes.ARETURN);
             visitor.visitMaxs(1, 0);
             visitor.visitEnd();
         }

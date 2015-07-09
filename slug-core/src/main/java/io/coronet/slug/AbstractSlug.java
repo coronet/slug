@@ -1,7 +1,6 @@
 package io.coronet.slug;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -14,10 +13,6 @@ public class AbstractSlug<T extends Slug<T>> implements Slug<T> {
     private final Class<T> type;
     private Map<String, Object> map;
     private boolean immutable;
-
-    protected AbstractSlug(Class<T> type) {
-        this(type, new HashMap<>());
-    }
 
     protected AbstractSlug(Class<T> type, Map<String, Object> map) {
         if (type == null) {
