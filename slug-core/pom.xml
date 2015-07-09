@@ -11,7 +11,7 @@
 
   <name>Slug</name>
   <description>
-    Slug is a framework for building flexible immutable data types.
+    Slug is a framework for building flexible data types.
   </description>
 
   <dependencies>

@@ -1,5 +1,5 @@
 /**
- * Slug is a framework for generating flexible immutable data types.
+ * Slug is a framework for generating flexible data types.
  *
  * @author David Murray &lt;fernomac@coronet.io&gt;
  */
