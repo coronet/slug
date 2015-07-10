@@ -31,6 +31,14 @@ public class SlugBox {
     public SlugBox() {
     }
 
+    public SlugWriter<?> writer() {
+        return new SlugObjectWriter<Object>(this);
+    }
+
+    public <T> SlugWriter<T> writerFor(Class<T> type) {
+        return new SlugObjectWriter<T>(this);
+    }
+
     public <T extends Slug<T>> T create(Class<T> type) {
         SlugFactory<T> factory = factoryFor(type);
         return factory.create();
