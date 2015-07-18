@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.JsonToken;
 /**
  *
  */
-public final class JsonSlugModule extends SlugModule {
+public final class JsonSlugModule implements SlugModule {
 
     public static Builder builder() {
         return new Builder();
