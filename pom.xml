@@ -26,6 +26,7 @@
 
   <modules>
     <module>slug-core</module>
+    <module>slug-json</module>
   </modules>
 
   <dependencyManagement>
