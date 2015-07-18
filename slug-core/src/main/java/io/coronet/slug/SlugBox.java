@@ -2,6 +2,7 @@ package io.coronet.slug;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,30 +26,22 @@ public class SlugBox {
     private static final String OBJECT =
             Type.getInternalName(Object.class);
 
-
-    private final FactoryCache cache = new FactoryCache();
+    private final SlugCache cache = new SlugCache();
 
     public SlugBox() {
     }
 
-    public SlugWriter<?> writer() {
-        return new SlugObjectWriter<Object>(this);
-    }
 
-    public <T> SlugWriter<T> writerFor(Class<T> type) {
-        return new SlugObjectWriter<T>(this);
-    }
-
-    public <T extends Slug<T>> T create(Class<T> type) {
+    public <T extends Slug<?>> T create(Class<T> type) {
         SlugFactory<T> factory = factoryFor(type);
         return factory.create();
     }
 
-    public <T extends Slug<T>> T create(Class<T> type, Map<String, ?> map) {
+    public <T extends Slug<?>> T create(Class<T> type, Map<String, ?> map) {
         return wrap(type, new HashMap<>(map));
     }
 
-    public <T extends Slug<T>> T wrap(Class<T> type, Map<String, Object> map) {
+    public <T extends Slug<?>> T wrap(Class<T> type, Map<String, Object> map) {
         SlugFactory<T> factory = factoryFor(type);
         return factory.create(map);
     }
@@ -65,29 +58,37 @@ public class SlugBox {
         return wrap(type, slug.asMap());
     }
 
-    public <T extends Slug<T>> SlugFactory<T> factoryFor(Class<T> type) {
+    public <T extends Slug<?>> SlugFactory<T> factoryFor(Class<T> type) {
+        return getOrCreateEntry(type).factory;
+    }
+
+    public <T extends Slug<?>> Map<String, java.lang.reflect.Type> getMembers(
+            Class<T> type) {
+
+        return getOrCreateEntry(type).members;
+    }
+
+    private <T extends Slug<?>> CacheEntry<T> getOrCreateEntry(Class<T> type) {
         if (type == null) {
             throw new NullPointerException("type");
         }
 
-        SlugFactory<T> factory = cache.get(type);
-        if (factory != null) {
-            return factory;
+        CacheEntry<T> entry = cache.get(type);
+        if (entry != null) {
+            return entry;
         }
 
         synchronized (type) {
-            factory = cache.get(type);
-            if (factory == null) {
-                factory = createFactoryFor(type);
-                cache.put(type, factory);
+            entry = cache.get(type);
+            if (entry == null) {
+                entry = createEntry(type);
+                cache.put(type, entry);
             }
-            return factory;
+            return entry;
         }
     }
 
-    private <T extends Slug<T>> SlugFactory<T> createFactoryFor(
-            Class<T> type) {
-
+    private <T extends Slug<?>> CacheEntry<T> createEntry(Class<T> type) {
         if (!type.isInterface()) {
             throw new IllegalArgumentException(type + " is not an interface");
         }
@@ -97,21 +98,29 @@ public class SlugBox {
 
         DirectLoader loader = new DirectLoader(type.getClassLoader());
 
-        Class<?> impl = createSlugImpl(loader, type);
-        Class<?> factory = createFactory(loader, impl);
+        Map<String, java.lang.reflect.Type> members = new HashMap<>();
+
+        Class<?> implType = createSlugImpl(loader, type, members);
+        Class<?> factoryType = createFactory(loader, implType);
+
+        members = Collections.unmodifiableMap(members);
 
         try {
 
             @SuppressWarnings("unchecked")
-            SlugFactory<T> result = (SlugFactory<T>) factory.newInstance();
-            return result;
+            SlugFactory<T> factory = (SlugFactory<T>) factoryType.newInstance();
+            return new CacheEntry<T>(factory, members);
 
         } catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException("Error creating factory", e);
         }
     }
 
-    private Class<?> createSlugImpl(DirectLoader loader, Class<?> iface) {
+    private Class<?> createSlugImpl(
+            DirectLoader loader,
+            Class<?> iface,
+            Map<String, java.lang.reflect.Type> members) {
+
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
         String ifaceName = Type.getInternalName(iface);
@@ -128,7 +137,7 @@ public class SlugBox {
                 new String[] { ifaceName });
 
         writeConstructor(writer, ifaceName);
-        writeMethods(writer, iface);
+        writeMethods(writer, iface, members);
 
         // }
         writer.visitEnd();
@@ -169,7 +178,11 @@ public class SlugBox {
         }
     }
 
-    private void writeMethods(ClassWriter writer, Class<?> iface) {
+    private void writeMethods(
+            ClassWriter writer,
+            Class<?> iface,
+            Map<String, java.lang.reflect.Type> members) {
+
         for (Method method : iface.getMethods()) {
             if (method.getDeclaringClass() == Slug.class) {
                 continue;
@@ -183,10 +196,8 @@ public class SlugBox {
 
             if (name.startsWith("get")) {
                 writeGetter(writer, method, name.substring(3));
-            } else if (name.startsWith("is")) {
-                writeGetter(writer, method, name.substring(2));
-            } else if (name.startsWith("with")) {
-                writeWither(writer, method, name.substring(4), iface);
+            } else if (name.startsWith("set")) {
+                writeSetter(writer, method, name.substring(3), iface, members);
             } else {
                 throw new IllegalStateException(
                         "Unimplementable method: " + method);
@@ -242,23 +253,26 @@ public class SlugBox {
         visitor.visitEnd();
     }
 
-    private void writeWither(
+    private void writeSetter(
             ClassWriter writer,
             Method method,
             String name,
-            Class<?> iface) {
+            Class<?> iface,
+            Map<String, java.lang.reflect.Type> members) {
 
         if (method.getParameterCount() != 1) {
             throw new IllegalStateException(
-                    "Wither must have exactly one parameter: " + method);
+                    "Setter must have exactly one parameter: " + method);
         }
 
         if (method.getReturnType() != iface) {
             throw new IllegalStateException(
-                    "Wither must return the interface type: " + method);
+                    "Setter must return the interface type: " + method);
         }
 
-        // ${Iface} with${name}(${ParamType} value) {
+        members.put(name, method.getGenericParameterTypes()[0]);
+
+        // ${Iface} set${name}(${ParamType} value) {
         MethodVisitor visitor = writer.visitMethod(
                 Opcodes.ACC_PUBLIC,
                 method.getName(),
@@ -268,14 +282,14 @@ public class SlugBox {
 
         visitor.visitCode();
 
-        // temp0 = super.with("${name}", value);
+        // temp0 = super.set("${name}", value);
         visitor.visitVarInsn(Opcodes.ALOAD, 0);
         visitor.visitLdcInsn(name);
         visitor.visitVarInsn(Opcodes.ALOAD, 1);
         visitor.visitMethodInsn(
                 Opcodes.INVOKESPECIAL,
                 ABSTRACT_SLUG,
-                "with",
+                "set",
                 "(Ljava/lang/String;Ljava/lang/Object;)Lio/coronet/slug/Slug;",
                 false);
 
@@ -379,22 +393,36 @@ public class SlugBox {
         }
     }
 
-    private static final class FactoryCache {
+    private static final class CacheEntry<T extends Slug<?>> {
 
-        private final Map<Class<?>, SlugFactory<?>> cache;
+        public final SlugFactory<T> factory;
+        public final Map<String, java.lang.reflect.Type> members;
 
-        public FactoryCache() {
+        public CacheEntry(
+                SlugFactory<T> factory,
+                Map<String, java.lang.reflect.Type> members) {
+
+            this.factory = factory;
+            this.members = members;
+        }
+    }
+
+    private static final class SlugCache {
+
+        private final Map<Class<?>, CacheEntry<?>> cache;
+
+        public SlugCache() {
             cache = new ConcurrentHashMap<>();
         }
 
         @SuppressWarnings("unchecked")
-        public <T extends Slug<T>> SlugFactory<T> get(Class<T> key) {
-            return (SlugFactory<T>) cache.get(key);
+        public <T extends Slug<?>> CacheEntry<T> get(Class<T> key) {
+            return (CacheEntry<T>) cache.get(key);
         }
 
-        public <T extends Slug<T>> void put(
+        public <T extends Slug<?>> void put(
                 Class<T> key,
-                SlugFactory<T> value) {
+                CacheEntry<T> value) {
 
             cache.put(key, value);
         }

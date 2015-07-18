@@ -9,7 +9,8 @@ public interface Example extends Slug<Example> {
 
     String getFoo();
 
-    Example withFoo(String value);
+    Example setFoo(String value);
+
 
     static final class Impl extends AbstractSlug<Example> implements Example {
 
@@ -23,8 +24,8 @@ public interface Example extends Slug<Example> {
         }
 
         @Override
-        public Example withFoo(String value) {
-            return super.with("Foo", value);
+        public Example setFoo(String value) {
+            return super.set("Foo", value);
         }
 
         public static final class Factory implements SlugFactory<Example> {

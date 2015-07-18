@@ -16,7 +16,7 @@ public interface Slug<T extends Slug<T>> {
 
     Object get(String member);
 
-    T with(String member, Object value);
+    T set(String member, Object value);
 
     Set<Map.Entry<String, Object>> entrySet();
 

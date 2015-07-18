@@ -27,7 +27,7 @@ public class SlugTest {
         Assert.assertTrue(slug.entrySet().isEmpty());
         Assert.assertTrue(slug.asMap().isEmpty());
 
-        Assert.assertSame(slug, slug.withFoo("Hello World"));
+        Assert.assertSame(slug, slug.setFoo("Hello World"));
 
         Assert.assertEquals("Hello World", slug.getFoo());
         Assert.assertNull(slug.getBar());
@@ -44,7 +44,7 @@ public class SlugTest {
         Assert.assertEquals(1, slug.asMap().size());
         Assert.assertEquals("Hello World", slug.asMap().get("Foo"));
 
-        Assert.assertSame(slug, slug.with("Foo", null));
+        Assert.assertSame(slug, slug.set("Foo", null));
 
         Assert.assertNull(slug.getFoo());
         Assert.assertNull(slug.get("Foo"));

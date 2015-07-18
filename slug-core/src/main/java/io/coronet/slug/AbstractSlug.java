@@ -52,7 +52,7 @@ public class AbstractSlug<T extends Slug<T>> implements Slug<T> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public T with(String member, Object value) {
+    public T set(String member, Object value) {
         if (member == null) {
             throw new NullPointerException("member");
         }
@@ -78,7 +78,7 @@ public class AbstractSlug<T extends Slug<T>> implements Slug<T> {
 
     @Override
     public String toString() {
-        return map.toString();
+        return type.getName() + "::" + map.toString();
     }
 
     @Override

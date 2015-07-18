@@ -6,8 +6,8 @@ package io.coronet.slug;
  */
 public interface TestSlug extends Slug<TestSlug> {
     String getFoo();
-    TestSlug withFoo(String value);
+    TestSlug setFoo(String value);
 
     Integer getBar();
-    TestSlug withBar(Integer value);
+    TestSlug setBar(Integer value);
 }
