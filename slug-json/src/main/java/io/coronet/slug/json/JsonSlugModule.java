@@ -76,6 +76,11 @@ public final class JsonSlugModule implements SlugModule {
     }
 
     @Override
+    public SlugBox getSlugBox() {
+        return box;
+    }
+
+    @Override
     public void serializeTo(Object object, OutputStream stream)
             throws IOException {
 
@@ -99,8 +104,12 @@ public final class JsonSlugModule implements SlugModule {
         }
     }
 
-    private Object deserializeTo(JsonParser parser, Type target)
+    public Object deserializeTo(JsonParser parser, Type target)
             throws IOException {
+
+        if (parser.getCurrentToken() == null) {
+            parser.nextToken();
+        }
 
         Object result = deserializeTo0(parser, target);
         result = deserializers.deserializeTo(result, target);
@@ -110,7 +119,8 @@ public final class JsonSlugModule implements SlugModule {
     private Object deserializeTo0(JsonParser parser, Type target)
             throws IOException {
 
-        switch (parser.getCurrentToken()) {
+        JsonToken token = parser.getCurrentToken();
+        switch (token) {
         case VALUE_NULL:            return null;
 
         case VALUE_TRUE:            return true;
@@ -127,7 +137,7 @@ public final class JsonSlugModule implements SlugModule {
 
         default:
             throw new IllegalStateException(
-                    "Unexpected token " + parser.getCurrentToken() + " at "
+                    "Unexpected token " + token + " at "
                     + parser.getCurrentLocation());
         }
     }

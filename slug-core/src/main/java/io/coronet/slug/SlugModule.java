@@ -13,6 +13,8 @@ import java.lang.reflect.Type;
  */
 public interface SlugModule {
 
+    SlugBox getSlugBox();
+
     void serializeTo(Object object, OutputStream stream) throws IOException;
 
     Object deserializeTo(InputStream stream, Type target) throws IOException;
