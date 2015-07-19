@@ -13,9 +13,11 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 /**
- *
+ * A {@code SlugBox} creates implementations of slug interfaces at runtime.
+ * It serves as a cache of the generated types, so you should generally create
+ * and share one per process to avoid repeated reflection/class generation.
  */
-public class SlugBox {
+public final class SlugBox {
 
     private static final String ABSTRACT_SLUG =
             Type.getInternalName(AbstractSlug.class);
@@ -26,42 +28,105 @@ public class SlugBox {
     private static final String OBJECT =
             Type.getInternalName(Object.class);
 
+
     private final SlugCache cache = new SlugCache();
 
+    /**
+     * Creates a new SlugBox with a default configuration.
+     *
+     * TODO: Is there a non-default configuration?
+     */
     public SlugBox() {
     }
 
 
+    /**
+     * Creates a new, mutable slug with no members set.
+     *
+     * @param type the interface type of the slug to create
+     * @return a new implementation of the given slug interface
+     */
     public <T extends Slug<?>> T create(Class<T> type) {
         SlugFactory<T> factory = factoryFor(type);
         return factory.create();
     }
 
+    /**
+     * Creates a new, mutable slug wrapping a copy of the given map as its
+     * initial state.
+     *
+     * @param type the interface type of the slug to create
+     * @param map the map of initial member values for the slug
+     * @return a new implementation of the given slug interface
+     */
     public <T extends Slug<?>> T create(Class<T> type, Map<String, ?> map) {
         return wrap(type, new HashMap<>(map));
     }
 
+    /**
+     * Creates a new, mutable slug directly wrapping the given map.
+     *
+     * @param type the interface type of the slug to create
+     * @param map the map of values to wrap
+     * @return a new implementation of the given slug interface
+     */
     public <T extends Slug<?>> T wrap(Class<T> type, Map<String, Object> map) {
         SlugFactory<T> factory = factoryFor(type);
         return factory.create(map);
     }
 
+    /**
+     * Creates a mutable copy of the given slug.
+     *
+     * @param slug the slug to copy
+     * @return a new, independent copy of the slug
+     */
     public <T extends Slug<T>> T copy(T slug) {
         return copy(slug.type(), slug);
     }
 
+    /**
+     * Creates a mutable copy of the given slug with a possibly-different
+     * interface type.
+     *
+     * @param type the new interface type to cast the copy to
+     * @param slug the slug to copy
+     * @return a new, independent copy of the slug implementing the given type
+     */
     public <T extends Slug<T>> T copy(Class<T> type, Slug<?> slug) {
         return create(type, slug.asMap());
     }
 
+    /**
+     * Creates a view of the given slug with a possibly-different interface
+     * type.
+     *
+     * @param type the new interface type to cast the slug to
+     * @param slug the slug to cast
+     * @return a view of the slug implementing the given type
+     */
     public <T extends Slug<T>> T cast(Class<T> type, Slug<?> slug) {
         return wrap(type, slug.asMap());
     }
 
+    /**
+     * Retrieves or creates a {@code SlugFactory} for the given slug type.
+     *
+     * @param type the type of slug
+     * @return a factory for instances of the given slug type
+     */
     public <T extends Slug<?>> SlugFactory<T> factoryFor(Class<T> type) {
         return getOrCreateEntry(type).factory;
     }
 
+    /**
+     * Gets an immutable map containing the "known" members of the given slug
+     * type (as defined by reflecting on the setter methods that the interface
+     * exposes when initially creating the implementation).
+     *
+     * @param type the slug type to introspect about
+     * @return a map from member name to expected member type
+     */
     public <T extends Slug<?>> Map<String, java.lang.reflect.Type> getMembers(
             Class<T> type) {
 

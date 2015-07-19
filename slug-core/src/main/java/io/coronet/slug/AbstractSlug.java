@@ -6,7 +6,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
+ * Abstract base for runtime-generated slug implementations.
  *
+ * @param <T> the interface type of this slug
  */
 public class AbstractSlug<T extends Slug<T>> implements Slug<T> {
 
@@ -14,6 +16,12 @@ public class AbstractSlug<T extends Slug<T>> implements Slug<T> {
     private Map<String, Object> map;
     private boolean immutable;
 
+    /**
+     * Creates a new slug wrapping the given set of members.
+     *
+     * @param type the interface type of this slug
+     * @param map the initial set of members for this slug
+     */
     protected AbstractSlug(Class<T> type, Map<String, Object> map) {
         if (type == null) {
             throw new NullPointerException("type");
