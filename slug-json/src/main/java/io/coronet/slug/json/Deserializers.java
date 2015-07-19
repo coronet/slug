@@ -1,6 +1,7 @@
 package io.coronet.slug.json;
 
 import io.coronet.slug.SlugBox;
+import io.coronet.slug.SlugTypeRegistry;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -35,10 +36,30 @@ public final class Deserializers {
      * @return a new standard builder
      */
     public static Builder standard(SlugBox box) {
+        return standard(box, null);
+    }
+
+    /**
+     * Creates a new builder initialized with the "standard" set of
+     * deserializers, including a {@link SlugDeserializer} that will use the
+     * given {@code SlugBox} and {@code SlugTypeRegistry}. The standard
+     * deserializers are registered with the lowest priority so any custom
+     * deserializers added afterwards will take precedence.
+     *
+     * @param box the {@code SlugBox} to use for deserializing slugs
+     * @param registry the {@code SlugTypeRegistry} to use, or null
+     * @return a new standard builder
+     */
+    public static Builder standard(
+            SlugBox box,
+            SlugTypeRegistry registry) {
+
         return new Builder()
                 .with(new ScalarDeserializer())
                 .with(new BinaryDeserializer())
-                .with(new SlugDeserializer(box));
+                .with(new ListDeserializer())
+                .with(new MapDeserializer())
+                .with(new SlugDeserializer(box, registry));
     }
 
     private final List<Deserializer> deserializers;
@@ -86,7 +107,7 @@ public final class Deserializers {
         if (deserializer == null) {
             return value;
         }
-        return deserializer.deserialize(value, target);
+        return deserializer.deserialize(value, target, this);
     }
 
     /**

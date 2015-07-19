@@ -1,5 +1,7 @@
 package io.coronet.slug.json;
 
+import io.coronet.slug.SlugTypeRegistry;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,12 +34,26 @@ public final class Serializers {
      * @return a new standard builder
      */
     public static Builder standard() {
+        return standard(null);
+    }
+
+    /**
+     * Creates a new builder initialized with the "standard" set of serializers,
+     * including a {@link SlugSerializer} that will use the given
+     * {@code SlugTypeRegistry} to include in-band type hints. The standard
+     * serializers are registered with the lowest priority, so any custom
+     * serializers added afterwards will take precedence.
+     *
+     * @param registry the {@code SlugTypeRegistry} to use, or null
+     * @return a new standard builder
+     */
+    public static Builder standard(SlugTypeRegistry registry) {
         return new Builder()
                 .with(new ScalarSerializer())
                 .with(new BinarySerializer())
                 .with(new ListSerializer())
                 .with(new MapSerializer())
-                .with(new SlugSerializer());
+                .with(new SlugSerializer(registry));
     }
 
     private final List<Serializer<?>> serializers;

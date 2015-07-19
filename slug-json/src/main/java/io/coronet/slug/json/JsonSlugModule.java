@@ -1,13 +1,12 @@
 package io.coronet.slug.json;
 
-import io.coronet.slug.Slug;
 import io.coronet.slug.SlugBox;
 import io.coronet.slug.SlugModule;
+import io.coronet.slug.SlugTypeRegistry;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +34,7 @@ public final class JsonSlugModule implements SlugModule {
     }
 
     private final SlugBox box;
+    private final SlugTypeRegistry registry;
     private final Serializers serializers;
     private final Deserializers deserializers;
     private final JsonFactory factory;
@@ -45,27 +45,37 @@ public final class JsonSlugModule implements SlugModule {
             b = new SlugBox();
         }
 
+        SlugTypeRegistry r = builder.registry;
+
         Serializers s = builder.serializers;
         if (s == null) {
-            s = Serializers.standard().build();
+            s = Serializers.standard(r).build();
         }
 
         Deserializers d = builder.deserializers;
         if (d == null) {
-            d = Deserializers.standard(b).build();
+            d = Deserializers.standard(b, r).build();
         }
 
         JsonFactory f = builder.factory;
         if (f == null) {
             f = new JsonFactory();
+
             f.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
             f.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
+
+            f.enable(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER);
             f.enable(JsonParser.Feature.ALLOW_COMMENTS);
-            f.enable(JsonParser.Feature.ALLOW_YAML_COMMENTS);
             f.enable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS);
+            f.enable(JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS);
+            f.enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES);
+            f.enable(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS);
+            f.enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES);
+            f.enable(JsonParser.Feature.ALLOW_YAML_COMMENTS);
         }
 
         this.box = b;
+        this.registry = r;
         this.serializers = s;
         this.deserializers = d;
         this.factory = f;
@@ -74,6 +84,11 @@ public final class JsonSlugModule implements SlugModule {
     @Override
     public SlugBox getSlugBox() {
         return box;
+    }
+
+    @Override
+    public SlugTypeRegistry getTypeRegistry() {
+        return registry;
     }
 
     @Override
@@ -133,7 +148,7 @@ public final class JsonSlugModule implements SlugModule {
             parser.nextToken();
         }
 
-        Object result = deserializeTo0(parser, target);
+        Object result = deserializeRaw(parser);
         result = deserializers.deserializeTo(result, target);
         return result;
     }
@@ -143,11 +158,10 @@ public final class JsonSlugModule implements SlugModule {
      * {@code Deserializer}.
      *
      * @param parser the parser to read from
-     * @param target the target type to deserialize to
      * @return the raw deserialized object
      * @throws IOException on error reading from the parser
      */
-    private Object deserializeTo0(JsonParser parser, Type target)
+    private Object deserializeRaw(JsonParser parser)
             throws IOException {
 
         JsonToken token = parser.getCurrentToken();
@@ -163,8 +177,8 @@ public final class JsonSlugModule implements SlugModule {
         case VALUE_NUMBER_INT:      return parser.getBigIntegerValue();
         case VALUE_NUMBER_FLOAT:    return parser.getDecimalValue();
 
-        case START_ARRAY:           return parseArray(parser, target);
-        case START_OBJECT:          return parseObject(parser, target);
+        case START_ARRAY:           return parseArray(parser);
+        case START_OBJECT:          return parseObject(parser);
 
         default:
             throw new IllegalStateException(
@@ -173,42 +187,19 @@ public final class JsonSlugModule implements SlugModule {
         }
     }
 
-    private Object parseArray(JsonParser parser, Type target)
-            throws IOException {
-
+    private Object parseArray(JsonParser parser) throws IOException {
         List<Object> list = new ArrayList<>();
 
-        Type element = getElementType(target);
-
         while (parser.nextToken() != JsonToken.END_ARRAY) {
-            Object value = deserializeTo(parser, element);
+            Object value = deserializeRaw(parser);
             list.add(value);
         }
 
         return list;
     }
 
-    private Type getElementType(Type listType) {
-        // TODO: Handle fancier generics stuff?
-
-        if (!(listType instanceof ParameterizedType)) {
-            return Object.class;
-        }
-
-        ParameterizedType ptype = (ParameterizedType) listType;
-        if (ptype.getRawType() != List.class) {
-            return Object.class;
-        }
-
-        return ptype.getActualTypeArguments()[0];
-    }
-
-    private Object parseObject(JsonParser parser, Type type)
-            throws IOException {
-
+    private Object parseObject(JsonParser parser) throws IOException {
         Map<String, Object> map = new HashMap<>();
-
-        TypeResolver resolver = getTypeResolver(type);
 
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (parser.getCurrentToken() != JsonToken.FIELD_NAME) {
@@ -220,38 +211,12 @@ public final class JsonSlugModule implements SlugModule {
             String name = parser.getText();
 
             parser.nextToken();
-            Object value = deserializeTo(parser, resolver.resolve(name));
+            Object value = deserializeRaw(parser);
 
             map.put(name, value);
         }
 
         return map;
-    }
-
-    private TypeResolver getTypeResolver(Type type) {
-        // TODO: Handle fancier generics stuff?
-
-        if (type instanceof Class<?>) {
-
-            Class<?> c = (Class<?>) type;
-
-            if (Slug.class.isAssignableFrom(c)) {
-                @SuppressWarnings("unchecked")
-                Class<? extends Slug<?>> s = (Class<? extends Slug<?>>) c;
-                return new SlugTypeResolver(box.getMembers(s));
-            }
-
-        } else if (type instanceof ParameterizedType) {
-
-            ParameterizedType ptype = (ParameterizedType) type;
-
-            if (ptype.getRawType() == Map.class) {
-                return new MapTypeResolver(ptype.getActualTypeArguments()[1]);
-            }
-
-        }
-
-        return new MapTypeResolver(Object.class);
     }
 
     /**
@@ -260,6 +225,7 @@ public final class JsonSlugModule implements SlugModule {
     public static final class Builder {
 
         private SlugBox box;
+        private SlugTypeRegistry registry;
         private Serializers serializers;
         private Deserializers deserializers;
         private JsonFactory factory;
@@ -274,6 +240,19 @@ public final class JsonSlugModule implements SlugModule {
          */
         public Builder withSlugBox(SlugBox b) {
             box = b;
+            return this;
+        }
+
+        /**
+         * Configures the {@code SlugTypeRegistry} that this module will use
+         * to resolve in-band type information. If left null, run-time type
+         * information will be ignored.
+         *
+         * @param r the custom {@code SlugTypeRegistry} to use
+         * @return this builder
+         */
+        public Builder withTypeRegistry(SlugTypeRegistry r) {
+            registry = r;
             return this;
         }
 
@@ -327,38 +306,6 @@ public final class JsonSlugModule implements SlugModule {
          */
         public JsonSlugModule build() {
             return new JsonSlugModule(this);
-        }
-    }
-
-    private static interface TypeResolver {
-        Type resolve(String name);
-    }
-
-    private static final class MapTypeResolver implements TypeResolver {
-
-        private final Type type;
-
-        public MapTypeResolver(Type type) {
-            this.type = type;
-        }
-
-        @Override
-        public Type resolve(String name) {
-            return type;
-        }
-    }
-
-    private static final class SlugTypeResolver implements TypeResolver {
-
-        private final Map<String, Type> members;
-
-        public SlugTypeResolver(Map<String, Type> members) {
-            this.members = members;
-        }
-
-        @Override
-        public Type resolve(String name) {
-            return members.get(name);
         }
     }
 }

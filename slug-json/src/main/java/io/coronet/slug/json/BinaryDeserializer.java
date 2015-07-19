@@ -22,7 +22,11 @@ public final class BinaryDeserializer implements Deserializer {
     }
 
     @Override
-    public Object deserialize(Object value, Type target) {
+    public Object deserialize(
+            Object value,
+            Type target,
+            Deserializers deserializers) {
+
         byte[] bytes;
 
         if (value instanceof byte[]) {

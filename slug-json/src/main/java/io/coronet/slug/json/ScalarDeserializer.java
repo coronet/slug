@@ -38,7 +38,11 @@ public final class ScalarDeserializer implements Deserializer {
     }
 
     @Override
-    public Object deserialize(Object value, Type target) {
+    public Object deserialize(
+            Object value,
+            Type target,
+            Deserializers deserializers) {
+
         return desers.get(target).deserialize(value);
     }
 

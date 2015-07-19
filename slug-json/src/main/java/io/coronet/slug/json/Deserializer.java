@@ -27,7 +27,9 @@ public interface Deserializer {
      *
      * @param value the raw value to deserialize
      * @param target the target type
+     * @param deserializers the set of deserializers to use for recursive
+     *            deserialization of complex elements
      * @return the deserialized value
      */
-    Object deserialize(Object value, Type target);
+    Object deserialize(Object value, Type target, Deserializers deserializers);
 }

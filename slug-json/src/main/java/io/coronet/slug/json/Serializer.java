@@ -27,7 +27,7 @@ public interface Serializer<T> {
      * @param value the value to serialize
      * @param generator the {@code JsonGenerator} to serialize it to
      * @param serializers the set of serializers to use for recursive
-     *            serialization of collection elements
+     *            serialization of complex elements
      * @throws IOException on error writing to the {@code generator}
      */
     void serialize(

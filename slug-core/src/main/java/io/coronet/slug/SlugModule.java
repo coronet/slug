@@ -24,6 +24,16 @@ public interface SlugModule {
     SlugBox getSlugBox();
 
     /**
+     * Retrieves the {@code SlugTypeRegistry} that this module will use to
+     * resolve in-line types, or null if no type registry is associated.
+     *
+     * @return the wrapped {@code SlugTypeRegistry}
+     */
+    default SlugTypeRegistry getTypeRegistry() {
+        return null;
+    }
+
+    /**
      * Serializes the given object and writes it to the given
      * {@code OutputStream}.
      *
