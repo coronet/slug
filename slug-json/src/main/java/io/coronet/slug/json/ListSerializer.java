@@ -6,7 +6,8 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- *
+ * A serializer that turns {@code List}s into JSON arrays, recursively
+ * serializing the elements of the list.
  */
 public final class ListSerializer implements Serializer<List<?>> {
 

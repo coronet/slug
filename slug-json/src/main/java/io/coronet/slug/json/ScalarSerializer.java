@@ -10,7 +10,8 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- *
+ * A basic serializer that serializes scalars (booleans, strings, and numbers)
+ * as their JSON equivalent.
  */
 public final class ScalarSerializer implements Serializer<Object> {
 

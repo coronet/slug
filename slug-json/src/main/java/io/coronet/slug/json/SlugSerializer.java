@@ -8,7 +8,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- *
+ * A serializer that knows how to turn Slugs into JSON objects.
  */
 public final class SlugSerializer implements Serializer<Slug<?>> {
 
@@ -26,8 +26,10 @@ public final class SlugSerializer implements Serializer<Slug<?>> {
         generator.writeStartObject();
 
         for (Map.Entry<String, Object> entry : value.entrySet()) {
-            generator.writeFieldName(entry.getKey());
-            serializers.serialize(entry.getValue(), generator);
+            if (entry.getValue() != null) {
+                generator.writeFieldName(entry.getKey());
+                serializers.serialize(entry.getValue(), generator);
+            }
         }
 
         generator.writeEndObject();

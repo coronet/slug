@@ -7,12 +7,18 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
- *
+ * A deserializer that knows how to turn {@code Map}s into {@code Slug}s.
  */
-public class SlugDeserializer implements Deserializer {
+public final class SlugDeserializer implements Deserializer {
 
     private final SlugBox box;
 
+    /**
+     * Creates a new {@code SlugDeserializer} that will use the given
+     * {@code SlugBox} to create slug instances.
+     *
+     * @param box the {@code SlugBox} to use
+     */
     public SlugDeserializer(SlugBox box) {
         if (box == null) {
             throw new NullPointerException("box");

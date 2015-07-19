@@ -6,9 +6,12 @@ import java.lang.reflect.Type;
 import java.util.Base64;
 
 /**
- *
+ * A deserializer that turns {@code Strings} or {@code byte[]}s to immutable
+ * {@code Bytes}. A {@code JsonParser} may return either for binary data,
+ * depending on its underlying format. If the input is a {@code String}, it's
+ * Base64 decoded.
  */
-public class BinaryDeserializer implements Deserializer {
+public final class BinaryDeserializer implements Deserializer {
 
     @Override
     public boolean canDeserialize(Object value, Type target) {
@@ -26,7 +29,7 @@ public class BinaryDeserializer implements Deserializer {
             bytes = (byte[]) value;
         } else {
             try {
-                // TODO: More efficient base64 codec?
+                // TODO: Worth looking for a more efficient base64 codec?
                 bytes = Base64.getDecoder().decode((String) value);
             } catch (IllegalArgumentException e) {
                 // TODO: Log a warning.

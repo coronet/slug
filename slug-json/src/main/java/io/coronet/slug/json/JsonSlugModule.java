@@ -20,10 +20,16 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
 /**
- *
+ * A {@code SlugModule} that serializes to and deserializes from JSON (or
+ * similar formats) using Jackson.
  */
 public final class JsonSlugModule implements SlugModule {
 
+    /**
+     * Creates a new builder for {@code JsonSlugModule}s.
+     *
+     * @return a new builder
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -41,22 +47,12 @@ public final class JsonSlugModule implements SlugModule {
 
         Serializers s = builder.serializers;
         if (s == null) {
-            s = Serializers.builder()
-                    .with(new ScalarSerializer())
-                    .with(new BinarySerializer())
-                    .with(new ListSerializer())
-                    .with(new MapSerializer())
-                    .with(new SlugSerializer())
-                    .build();
+            s = Serializers.standard().build();
         }
 
         Deserializers d = builder.deserializers;
         if (d == null) {
-            d = Deserializers.builder()
-                    .with(new ScalarDeserializer())
-                    .with(new BinaryDeserializer())
-                    .with(new SlugDeserializer(b))
-                    .build();
+            d = Deserializers.standard(b).build();
         }
 
         JsonFactory f = builder.factory;
@@ -89,6 +85,15 @@ public final class JsonSlugModule implements SlugModule {
         }
     }
 
+    /**
+     * Serializes an object to the given {@code JsonGenerator}.
+     *
+     * @param object the object to serialize
+     * @param generator the generator to write it to
+     * @throws NullPointerException if {@code object} or {@code generator} is
+     *             null
+     * @throws IOException on error writing to the generator
+     */
     public void serializeTo(Object object, JsonGenerator generator)
             throws IOException {
 
@@ -104,8 +109,25 @@ public final class JsonSlugModule implements SlugModule {
         }
     }
 
+    /**
+     * Attempts to deserialize an instance of the given type from the given
+     * {@code JsonParser}. The returned value may or may not actually be an
+     * instance of the requested type, depending on what's found in the
+     * parser. It's more of a "guideline."
+     *
+     * @param parser the JSON parser to read from
+     * @param target the target type to deserialize to
+     * @return the deserialized object
+     * @throws NullPointerException if {@code parser} is null
+     * @throws IOException on error reading from the parser or if the input
+     *             data is malformed
+     */
     public Object deserializeTo(JsonParser parser, Type target)
             throws IOException {
+
+        if (parser == null) {
+            throw new NullPointerException("parser");
+        }
 
         if (parser.getCurrentToken() == null) {
             parser.nextToken();
@@ -116,6 +138,15 @@ public final class JsonSlugModule implements SlugModule {
         return result;
     }
 
+    /**
+     * Deserializes to a "raw" type, which will then be fed to the appropriate
+     * {@code Deserializer}.
+     *
+     * @param parser the parser to read from
+     * @param target the target type to deserialize to
+     * @return the raw deserialized object
+     * @throws IOException on error reading from the parser
+     */
     private Object deserializeTo0(JsonParser parser, Type target)
             throws IOException {
 
@@ -158,6 +189,8 @@ public final class JsonSlugModule implements SlugModule {
     }
 
     private Type getElementType(Type listType) {
+        // TODO: Handle fancier generics stuff?
+
         if (!(listType instanceof ParameterizedType)) {
             return Object.class;
         }
@@ -196,6 +229,8 @@ public final class JsonSlugModule implements SlugModule {
     }
 
     private TypeResolver getTypeResolver(Type type) {
+        // TODO: Handle fancier generics stuff?
+
         if (type instanceof Class<?>) {
 
             Class<?> c = (Class<?>) type;
@@ -219,6 +254,9 @@ public final class JsonSlugModule implements SlugModule {
         return new MapTypeResolver(Object.class);
     }
 
+    /**
+     * A fluent builder for {@code JsonSlugModule}s.
+     */
     public static final class Builder {
 
         private SlugBox box;
@@ -226,26 +264,67 @@ public final class JsonSlugModule implements SlugModule {
         private Deserializers deserializers;
         private JsonFactory factory;
 
+        /**
+         * Configures the {@code SlugBox} that this module will use to create
+         * new slugs. If left null, a new, default {@code SlugBox} will be
+         * created for this module.
+         *
+         * @param b the custom {@code SlugBox} to use
+         * @return this builder
+         */
         public Builder withSlugBox(SlugBox b) {
             box = b;
             return this;
         }
 
+        /**
+         * Configures the {@code Serializers} that this module will use to
+         * serialize objects to JSON. If left null, a basic set of serializers
+         * that can handle Booleans, Strings, Numbers, Bytes, Lists, Maps, and
+         * Slugs will be created.
+         *
+         * @param s the set of {@code Serializers} to use
+         * @return this builder
+         */
         public Builder withSerializers(Serializers s) {
             serializers = s;
             return this;
         }
 
+        /**
+         * Configures the {@code Deserializers} that this module will use to
+         * deserialize objects from JSON. If left null, a basic set of
+         * deserializers that can handle Booleans, Strings, Numbers, Bytes,
+         * Lists, Maps, and Slugs will be created.
+         *
+         * @param d the set of {@code Deserializers} to use
+         * @return this builder
+         */
         public Builder withDeserializers(Deserializers d) {
             deserializers = d;
             return this;
         }
 
+        /**
+         * Configures the {@code JsonFactory} to use for parsing and generating
+         * JSON. If left null, a basic {@code JsonFactory} will be created
+         * that outputs standard JSON but is a bit more liberal in what it
+         * accepts (ie C/YAML comments, non-numeric numbers).
+         *
+         * @param f the {@code JsonFactory} to use
+         * @return this builder
+         */
         public Builder withJsonFactory(JsonFactory f) {
             factory = f;
             return this;
         }
 
+        /**
+         * Builds a {@code JsonSlugModule} with the current configuration of
+         * this builder.
+         *
+         * @return a new {@code JsonSlugModule}
+         */
         public JsonSlugModule build() {
             return new JsonSlugModule(this);
         }

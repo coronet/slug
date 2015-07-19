@@ -7,9 +7,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
- * A basic deserializer that makes a guess at an appropriate java type.
+ * A basic deserializer that transforms raw numeric scalars to the requested
+ * {@code Number} type, if the actual value will fit.
  */
 public final class ScalarDeserializer implements Deserializer {
 

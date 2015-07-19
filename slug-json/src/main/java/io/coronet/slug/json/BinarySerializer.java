@@ -8,9 +8,10 @@ import java.io.InputStream;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- *
+ * A serializer that turns {@code Bytes} into an appropriate binary
+ * representation using {@link JsonGenerator#writeBinary(InputStream, long)}.
  */
-public class BinarySerializer implements Serializer<Bytes> {
+public final class BinarySerializer implements Serializer<Bytes> {
 
     @Override
     public boolean canSerialize(Object value) {
