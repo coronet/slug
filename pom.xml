@@ -16,6 +16,13 @@
   <description>The parent POM for Slug</description>
   <url>https://github.com/coronet/slug</url>
 
+  <scm>
+    <connection>scm:git:ssh://git@github.com/coronet/slug.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/coronet/slug.git</developerConnection>
+    <url>https://github.com/coronet/slug</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <licenses>
     <license>
       <name>MIT License</name>
@@ -33,8 +40,8 @@
     <dependencies>
 
       <dependency>
-        <groupId>io.coronet.slug</groupId>
-        <artifactId>slug-core</artifactId>
+        <groupId>io.coronet.bytes</groupId>
+        <artifactId>bytes</artifactId>
         <version>0.0.1-SNAPSHOT</version>
       </dependency>
 

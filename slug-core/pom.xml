@@ -17,15 +17,14 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.ow2.asm</groupId>
-      <artifactId>asm</artifactId>
-      <version>5.0.4</version>
+      <groupId>io.coronet.bytes</groupId>
+      <artifactId>bytes</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>io.coronet.bytes</groupId>
-      <artifactId>bytes</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>5.0.4</version>
     </dependency>
 
     <dependency>

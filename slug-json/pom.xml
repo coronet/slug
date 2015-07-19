@@ -16,8 +16,14 @@
   <dependencies>
 
     <dependency>
+      <groupId>io.coronet.bytes</groupId>
+      <artifactId>bytes</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>io.coronet.slug</groupId>
       <artifactId>slug-core</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>
