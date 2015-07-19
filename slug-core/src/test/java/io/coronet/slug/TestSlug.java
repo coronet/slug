@@ -1,5 +1,7 @@
 package io.coronet.slug;
 
+import io.coronet.bytes.Bytes;
+
 
 /**
  *
@@ -10,4 +12,7 @@ public interface TestSlug extends Slug<TestSlug> {
 
     Integer getBar();
     TestSlug setBar(Integer value);
+
+    Bytes getBinary();
+    void setBinary(Bytes value);
 }

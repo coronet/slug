@@ -1,5 +1,7 @@
 package io.coronet.slug;
 
+import io.coronet.bytes.Bytes;
+
 import java.util.Map;
 
 import org.junit.Assert;
@@ -50,5 +52,8 @@ public class SlugTest {
         Assert.assertNull(slug.get("Foo"));
         Assert.assertEquals(0, slug.entrySet().size());
         Assert.assertEquals(0, slug.asMap().size());
+
+        slug.setBinary(Bytes.from("abc"));
+        Assert.assertEquals("abc", slug.getBinary().toString());
     }
 }

@@ -265,9 +265,12 @@ public class SlugBox {
                     "Setter must have exactly one parameter: " + method);
         }
 
-        if (method.getReturnType() != iface) {
+        if (method.getReturnType() != void.class
+                && method.getReturnType() != iface) {
+
             throw new IllegalStateException(
-                    "Setter must return the interface type: " + method);
+                    "Setter must return void or the interface type: "
+                    + method);
         }
 
         members.put(name, method.getGenericParameterTypes()[0]);
@@ -293,13 +296,18 @@ public class SlugBox {
                 "(Ljava/lang/String;Ljava/lang/Object;)Lio/coronet/slug/Slug;",
                 false);
 
-        // temp1 = (${IFace}) temp0;
-        visitor.visitTypeInsn(
-                Opcodes.CHECKCAST,
-                Type.getReturnType(method).getInternalName());
+        if (method.getReturnType() == iface) {
+            // temp1 = (${IFace}) temp0;
+            visitor.visitTypeInsn(
+                    Opcodes.CHECKCAST,
+                    Type.getReturnType(method).getInternalName());
 
-        // return temp1;
-        visitor.visitInsn(Opcodes.ARETURN);
+            // return temp1;
+            visitor.visitInsn(Opcodes.ARETURN);
+        } else {
+            // return;
+            visitor.visitInsn(Opcodes.RETURN);
+        }
 
         // }
         visitor.visitMaxs(3, 0);
