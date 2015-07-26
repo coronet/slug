@@ -51,6 +51,7 @@ public final class Serializers {
         return new Builder()
                 .with(new ScalarSerializer())
                 .with(new BinarySerializer())
+                .with(new UuidSerializer())
                 .with(new ListSerializer())
                 .with(new MapSerializer())
                 .with(new SlugSerializer(registry));

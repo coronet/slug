@@ -57,6 +57,7 @@ public final class Deserializers {
         return new Builder()
                 .with(new ScalarDeserializer())
                 .with(new BinaryDeserializer())
+                .with(new UuidDeserializer())
                 .with(new ListDeserializer())
                 .with(new MapDeserializer())
                 .with(new SlugDeserializer(box, registry));
